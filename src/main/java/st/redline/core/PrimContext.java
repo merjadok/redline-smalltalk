@@ -7,19 +7,19 @@ public class PrimContext {
 
     private final PrimObject receiver;
     private final PrimObject lookupClass;
-    private final PrimContext outerContext;
     private final String selector;
     private final PrimObject[] arguments;
     private PrimObject[] temporaries;
+    private PrimContext homeContext;
+    private PrimContext outerContext;
 
     public PrimContext(PrimObject receiver) {
-        this(receiver, null, null, null, null);
+        this(receiver, null, null, null);
     }
 
-    public PrimContext(PrimObject receiver, PrimObject lookupClass, PrimContext outerContext, String selector, PrimObject[] arguments) {
+    public PrimContext(PrimObject receiver, PrimObject lookupClass, String selector, PrimObject[] arguments) {
         this.receiver = receiver;
         this.lookupClass = lookupClass;
-        this.outerContext = outerContext;
         this.selector = selector;
         this.arguments = arguments;
     }
@@ -64,6 +64,14 @@ public class PrimContext {
         return arguments[index];
     }
 
+    public PrimObject outerArgumentAt(int index) {
+        return outerContext.argumentAt(index);
+    }
+
+    public PrimObject homeArgumentAt(int index) {
+        return homeContext.argumentAt(index);
+    }
+
     public Object argumentJavaValueAt(int index) {
         return argumentAt(index).javaValue();
     }
@@ -72,11 +80,44 @@ public class PrimContext {
         return temporaries[index];
     }
 
+    public PrimObject homeTemporaryAt(int index) {
+        return homeContext.temporaryAt(index);
+    }
+
     public void temporaryAtPut(int index, PrimObject object) {
         temporaries[index] = object;
     }
 
+    public PrimObject instVarAt(String var) {
+        throw new RuntimeException("TODO.JCL - get instVar: " + var);
+    }
+
+    public void instVarAtPut(String var, PrimObject object) {
+        throw new RuntimeException("TODO.JCL - set instVar: " + var);
+    }
+
     public static void temporaryPutAt(PrimObject object, int index, PrimContext context) {
         context.temporaryAtPut(index, object);
+    }
+
+    public static void homeTemporaryPutAt(PrimObject object, int index, PrimContext context) {
+        context.homeContext().temporaryAtPut(index, object);
+    }
+
+    public static void instVarPutAt(PrimObject object, String var, PrimContext context) {
+        context.instVarAtPut(var, object);
+    }
+
+    public void setupCallContext(PrimContext context) {
+        homeContext = context.homeContext();
+        outerContext = context;
+    }
+
+    public PrimContext outerContext() {
+        return outerContext;
+    }
+
+    public PrimContext homeContext() {
+        return homeContext == null ? this : homeContext;
     }
 }

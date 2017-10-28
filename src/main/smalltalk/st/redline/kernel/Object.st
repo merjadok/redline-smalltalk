@@ -1,271 +1,365 @@
 "Redline Smalltalk, Copyright (c) James C. Ladd. All rights reserved. See LICENSE in the root of this distribution."
 
-PrimObject subclass: #Object.
-
-"category: initialisation"
+PrimObject subclass: #Object
+           instanceVariableNames: ''
+           classVariableNames: 'DependentsFields '
+           poolDictionaries: ''
+           category: 'Kernel-Objects'.
 
 - initialize
-    "Subclasses should redefine this method to perform initializations on instance creation"
-    ^ self.
-
-"category: evaluating"
-
-- value
-    ^ self.
-
-"category: accessing"
-
-- class
-    "Primitive. Answer the object which is the receiver's class."
-    JVM primitive: 111.
-
-- yourself
-    ^ self.
-
-- at: index
-    "Answer the value of the indexed instance variable of the receiver whose index is the argument, index. If the
-     receiver does not have indexed variables, or if the argument is greater than the number of indexed variables, then
-     report an error."
-    JVM primitive: 144.
-
-- at: index put: anObject
-    "Store the argument, anObject, as the value of the indexed instance variable of the receiver whose index is the
-     argument, index. If the receiver does not have indexed variables, or if the argument is greater than the number of
-     indexed variables, then report an error. Answer anObject."
-    JVM primitive: 143.
-
-- size
-    "Answer the receiver's number of indexed variables. This value is the same as the largest legal index."
-    JVM primitive: 62.
-
-- basicSize
-    "Same as size. The method associated with this message, however, cannot be modified in any subclass."
-    JVM primitive: 62.
-
-- basicAt: index
-    "Answer the value of the indexed instance variable of the receiver whose index is the argument, index. If the
-     receiver does not have indexed variables, or if the argument is greater than the number of indexed variables, then
-     report an error."
-    JVM primitive: 144.
-
-- basicAt: index put: anObject
-    "Store the argument, anObject, as the value of the indexed instance variable of the receiver whose index is the
-     argument, index. If the receiver does not have indexed variables, or if the argument is greater than the number of
-     indexed variables, then report an error. Answer anObject."
-    JVM primitive: 143.
-
-"category: comparing"
+  ^ self.
 
 - = anObject
-    "Answer whether the receiver and the argument represent the same object."
-    ^ self == anObject.
+	^ self == anObject.
 
 - == anObject
-    "Primitive. Answer whether the receiver and the argument are the same object (have the same object pointer).
-     Do not redefine the message == in any other class! Essential. No Lookup. Do not override in any subclass.
-     NOTE: The Blue Book says just: Answer whether the receiver and the argument are the same object."
-    JVM primitive: 110.
-
-- ~= anObject
-    "Answer whether the receiver and the argument do not represent the same object."
-    ^ self = anObject == false.
-
-- ~~ anObject
-    "Answer whether the receiver and the argument are not the same object."
-    ^ (self == anObject) not.
-
-- identityHash
-    "Answer a SmallInteger whose value is related to the receiver's identity. This method must not be overridden,
-     except by SmallInteger. Do not override."
-    JVM primitive: 75.
-
-- hash
-    "Answer an Integer computed with respect to the representation of the receiver."
-    ^ self identityHash.
-
-"category: class membership"
-
-- isKindOf: aClass
-    "Answer whether the argument, aClass, is a superclass or class of the receiver."
-    ^ self class == aClass
-        ifTrue: [ true ]
-        ifFalse: [ self class inheritsFrom: aClass ].
-
-- isMemberOf: aClass
-    "Answer whether the receiver is an instance of the class, aClass."
-    ^ self class == aClass.
-
-- respondsTo: aSymbol
-    "Answer whether the method dictionary of the receiver's class contains aSymbol as a message selector."
-    ^ self class canUnderstand: aSymbol.
-
-"category: copying"
-
-- copy
-    "Answer another instance just like the receiver. Subclasses typically override postCopy; they typically do not
-     override shallowCopy. Copy is a template method in the sense of Design Patterns. So do not override it.
-     Override postCopy instead. Pay attention that normally you should call postCopy of your superclass too."
-    ^ self shallowCopy postCopy.
-
-- postCopy
-	"I'm a hook method in the sense of Design Patterns TemplateHook/Methods. I'm called by copy. self is a shallow copy,
-	 subclasses should copy fields as necessary to complete the full copy"
-	^ self.
-
-- shallowCopy
-    "Answer a copy of the receiver which shares the receiver's instance variables. It should never be overridden. I'm
-     invoked from the copy template method. Subclasses that need to specialize the copy should specialize the postCopy
-     hook method."
-    self notImplementedYet.
-
-- deepCopy
-    "Answer a copy of the receiver with its own copy of each instance variable. deepCopy does a deep copy.
-     It should never be overridden and only be used if you want to get these very specific semantics."
-    self notImplementedYet.
-
-"category: dependents access"
+	JVM primitive: 110.
 
 - addDependent: anObject
-    "Make the given object one of the receiver's dependents."
-    self notImplementedYet.
+	| dependents |
+	dependents := self dependents.
+	dependents do: [ :o |
+		o == anObject ifTrue: [^ self].
+		nil
+	].
+	DependentsFields at: self put: (dependents copyWith: anObject).
 
-- removeDependent: anObject
-    "Remove the given object as one of the receiver's dependents."
-    self notImplementedYet.
+- as: aSimilarClass
+	^ aSimilarClass newFrom: self.
 
-- dependents
-    "Answer a collection of objects that are 'dependent' on the receiver; that is, all objects that should be notified
-     if the receiver changes."
-    self notImplementedYet.
+- asOrderedCollection
+	^ (OrderedCollection new: 1) add: self;
+	 yourself.
 
-- release
-    "Remove references to objects that may refer to the receiver. This message should be overridden by subclasses with
-     any cycles, in which case the subclass should also include the expression super release."
-    self notImplementedYet.
+- asString
+	^ self printString.
 
-- broadcast: aSymbol
-    self notImplementedYet.
+- at: index
+	JVM primitive: 60.
 
-- broadcast: aSymbol with: anObject
-    self notImplementedYet.
+- at: index put: value
+	JVM primitive: 61.
 
-"category: updating"
+- atPin: index
+	JVM primitive: 60.
 
-- changed
-    "Receiver changed in a general way; inform all the dependents by sending each dependent an update: message."
-    self changed: self.
+- atWrap: index
+	JVM primitive: 60.
 
-- changed: aParameter
-    "Receiver changed. The change is denoted by the argument aParameter. Usually the argument is a Symbol that is part
-     of the dependent's change protocol. Inform all of the dependents."
-    self notImplementedYet.
+- basicAt: index
+	JVM primitive: 60.
 
-- update: aParameter
-    "Receive a change notice from an object of whom the receiver is a dependent. The default behavior is to do nothing;
-     a subclass might want to change itself in some way."
-    ^ self.
+- basicAt: index put: value
+	JVM primitive: 61.
 
-"category: error handling"
-
-- error: aString
-    "Report to the user that an error occurred in the context of responding to a message to the receiver. The report
-     uses the argument, aString, as part of the error notification comment."
-    JVM primitive: 131.
-
-- doesNotUnderstand: aMessage
-    "Report to the user that the receiver does not understand the argument, aMessage, as a message."
-    self error: aMessage.
-
-- primitiveFailed
-    "Announce that a primitive has failed and there is no appropriate Smalltalk code to run."
-    self error: 'a primitive has failed'.
-
-- shouldNotImplement
-    "Announce that, although the receiver inherits this message, it should not implement it."
-    self error: 'This message is not appropriate for this object'.
-
-- subclassResponsibility
-    "This message sets up a framework for the behavior of the class' subclasses. Announce that the subclass should have
-     implemented this message."
-    self error: 'My subclass should have overridden one of my messages.'.
-
-- notImplementedYet
-    "Announce that, although the receiver inherits this message, it is not implemented YET."
-    self error: 'This message is not implemented yet. Please implement is via a Test.'.
-
-"category: testing"
-
-- isNil
-    "Coerces nil to true and everything else to false."
-    ^ false.
-
-- notNil
-    "Coerces nil to false and everything else to true."
-    ^ true.
-
-- ifNil: aBlock
-    "Return self, or evaluate the block if I'm == nil - NOTE: This is not actually in the Blue Book."
-    ^ self.
-
-"category: message handling"
-
-- perform: aSymbol
-    "Send the unary selector, aSymbol, to the receiver."
-    JVM primitive: 83.
-
-- perform: aSymbol with: anObject
-    "Send the selector, aSymbol, to the receiver with anObject as its argument."
-    JVM primitive: 84.
-
-- perform: aSymbol with: firstObject with: secondObject
-    "Send the selector, aSymbol, to the receiver with the given arguments."
-    JVM primitive: 140.
-
-- perform: aSymbol with: firstObject with: secondObject with: thirdObject
-    "Send the selector, aSymbol, to the receiver with the given arguments."
-    JVM primitive: 141.
-
-- perform: aSymbol withArguments: arguments
-    "Send the selector, aSymbol, to the receiver with the given arguments."
-    JVM primitive: 142.
-
-"category: printing"
-
-- printString
-    "Answer a String whose characters are a description of the receiver."
-    | stream |
-    stream := WriteStream on: String new.
-    self printOn: stream.
-    ^ stream contents.
-
-- printOn: aStream
-    "Append to the argument, aStream, a sequence of characters that identifies the receiver."
-    | title |
-    title := self class name.
-    aStream
-      nextPutAll: (title first isVowel ifTrue: [ 'an ' ] ifFalse: [ 'a ' ]);
-      nextPutAll: title.
-
-"category: storing"
-
-- storeString
-    "Answer a String representation of the receiver from which the receiver can be reconstructed."
-    ^ String streamContents: [ :s | self storeOn: s ].
-
-"category: system primitives"
-
-- instVarAt: index
-    "Primitive. Answer a fixed variable in an object. The numbering of the variables corresponds to the named instance
-     variables. Fail if the index is not an Integer or is not the index of a fixed variable."
-    JVM primitive: 73.
-
-- instVarAt: anInteger put: anObject
-    "Primitive. Store a value into a fixed variable in the receiver. The numbering of the variables corresponds to the
-     named instance variables. Fail if the index is not an Integer or is not the index of a fixed variable. Answer the
-     value stored as the result. Using this message violates the principle that each object has sovereign control over
-     the storing of values into its instance variables."
-    JVM primitive: 74.
+- basicSize
+	JVM primitive: 62.
 
 - become: otherObject
-    self error: 'implement me'.
+	(Array with: self)
+		elementsExchangeIdentityWith: (Array with: otherObject).
 
+- bindingOf: aString
+  ^ nil.
+
+- breakDependents
+  DependentsFields removeKey: self.
+  " TODO-JCL: was DependentsFields removeKey: self ifAbsent: []."
+
+- caseError
+	self error: 'Case not found, and no otherwise clause'.
+
+- caseOf: aBlockAssociationCollection
+	^ self caseOf: aBlockAssociationCollection.
+
+- caseOf: aBlockAssociationCollection otherwise: aBlock
+	aBlockAssociationCollection
+		associationsDo: [ :assoc |
+			assoc key value = self ifTrue: [^ assoc value value].
+			nil ].
+	^ aBlock value.
+
+- changed
+	self changed: self.
+
+- changed: aParameter
+	self dependents do: [:aDependent | aDependent update: aParameter].
+
+- class
+	JVM primitive: 111.
+
+- copy
+	^ self shallowCopy.
+
+- deepCopy
+	JVM primitive: 301.
+
+- dependents
+	(DependentsFields includesKey: self)
+		ifTrue: [^ DependentsFields at: self].
+	^ #().
+
+- do: aBlock
+	self notify: 'Only collections should respond to "do:". The "do:" method in Object will soon be removed; clients depending on it should use "in:" instead. If you get this message in system code, please report it to johnm@wdi.disney.com. Proceed from this notifier to get the old behavior.'.
+	^ self in: aBlock.
+
+- error: aString
+  JVM primitive: 302.
+
+- errorImproperStore
+	self error: 'Improper store into indexable object'.
+
+- errorNonIntegerIndex
+	self error: 'only integers should be used as indices'.
+
+- errorSubscriptBounds: index
+	self error: 'subscript is out of bounds: ' + index printString.
+
+- flag: aSymbol
+	^ self.
+
+- halt
+	JVM primitive: 303.
+
+- halt: aString
+	JVM primitive: 303.
+
+- hash
+	^ self identityHash.
+
+- identityHash
+	JVM primitive: 75.
+
+- ifNil: nilBlock
+	^ self.
+
+- ifNil: nilBlock ifNotNil: ifNotNilBlock
+	^ ifNotNilBlock value.
+
+- ifNotNil: ifNotNilBlock
+	^ ifNotNilBlock value.
+
+- ifNotNil: ifNotNilBlock ifNil: nilBlock
+	^ ifNotNilBlock value.
+
+- in: aBlock
+	^ aBlock value: self.
+
+- inline: inlineFlag
+	^ self.
+
+- instVarAt: index
+	JVM primitive: 73.
+
+- instVarAt: anInteger put: anObject
+	JVM primitive: 74.
+
+- isInteger
+	^ false.
+
+- isKindOf: aClass
+	self class == aClass ifTrue: [^ true].
+	^ self class inheritsFrom: aClass.
+
+- isLiteral
+	^ false.
+
+- isMemberOf: aClass
+	^ self class == aClass.
+
+- isNil
+	^ false.
+
+- isNumber
+	^ false.
+
+- isPseudoContext
+	^ false.
+
+- isText
+	^ false.
+
+- longPrintOn: aStream
+	self class allInstVarNames
+		doWithIndex:
+			[ :title :index |
+			aStream nextPutAll: title;
+			 nextPut: $:;
+			 space;
+			 tab.
+			(self instVarAt: index)
+				printOn: aStream.
+			aStream cr].
+
+- longPrintString
+	| aStream |
+	aStream := WriteStream on: (String new: 100).
+	self longPrintOn: aStream.
+	^ aStream contents.
+
+- modelWakeUp
+	^ self.
+
+- name
+	^ self printString.
+
+- nextInstance
+	JVM primitive: 78.
+
+- nextObject
+	JVM primitive: 139.
+
+- notNil
+	^ true.
+
+- notYetImplemented
+	self inform: 'Not yet implemented'.
+
+- notify: aString
+  JVM primitive: 304.
+
+- notify: aString at: location
+	self notify: aString.
+
+- okToChange
+	^ true.
+
+- perform: aSymbol
+	JVM primitive: 83.
+
+- perform: aSymbol with: anObject
+	JVM primitive: 83.
+
+- perform: aSymbol with: firstObject with: secondObject
+	JVM primitive: 83.
+
+- perform: aSymbol with: firstObject with: secondObject with: thirdObject
+	JVM primitive: 83.
+
+- perform: selector withArguments: anArray
+	JVM primitive: 84.
+
+- pointsTo: anObject
+	JVM primitive: 132.
+
+- primitiveError: aString
+  JVM primitive: 305.
+
+- primitiveFailed
+	self error: 'a primitive has failed'.
+
+- printOn: aStream
+	| title |
+	title := self class name.
+	aStream nextPutAll: ((title at: 1) isVowel
+			ifTrue: ['an ']
+			ifFalse: ['a '])
+			+ title.
+
+- printString
+	| limit limitedString |
+	limit := 50000.
+	limitedString := String streamContents: [:s | self printOn: s]
+				limitedTo: limit.
+	limitedString size < limit ifTrue: [^ limitedString].
+	^ limitedString + '...etc...'.
+
+- readFromString: aString
+	^ self readFrom: (ReadStream on: aString).
+
+- rehash
+	^ self.
+
+- release
+	self breakDependents.
+
+- removeDependent: anObject
+  self error: 'implement me'.
+  " TODO-JCL: Implement."
+
+- respondsTo: aSymbol
+  ^ self class canUnderstand: aSymbol.
+
+- shallowCopy
+	JVM primitive: 148.
+
+- shouldNotImplement
+	self error: 'This message is not appropriate for this object'.
+
+- size
+	JVM primitive: 62.
+
+- someObject
+	JVM primitive: 138.
+
+- species
+	^ self class.
+
+- storeAt: offset inTempFrame: aContext
+	^ aContext tempAt: offset put: self.
+
+- storeOn: aStream
+	aStream nextPut: $(.
+	self class isVariable
+		ifTrue: [aStream nextPutAll: '(' , self class name , ' basicNew: ';
+			 store: self basicSize;
+			 nextPutAll: ') ']
+		ifFalse: [aStream nextPutAll: self class name , ' basicNew'].
+	1 to: self class instSize do: [:i | aStream nextPutAll: ' instVarAt: ';
+		 store: i;
+		 nextPutAll: ' put: ';
+		 store: (self instVarAt: i);
+		 nextPut: $;].
+	1 to: self basicSize do: [:i | aStream nextPutAll: ' basicAt: ';
+		 store: i;
+		 nextPutAll: ' put: ';
+		 store: (self basicAt: i);
+		 nextPut: $;].
+	aStream nextPutAll: ' yourself)'.
+
+- storeString
+	^ String streamContents: [:s | self storeOn: s].
+
+- subclassResponsibility
+	self error: 'My subclass should have overridden one of my messages.'.
+
+- tryPrimitive: primIndex withArgs: argumentArray
+	JVM primitive: 118.
+
+- update: aParameter
+	^ self.
+
+- var: varSymbol declareC: declString
+	^ self.
+
+- yourself
+	^ self.
+
+- ~= anObject
+	^ self = anObject == false.
+
+- ~~ anObject
+	self == anObject ifTrue: [^ false].
+	^ true.
+
++ newFrom: aSimilarObject
+	| myInstVars similarInstVars any inst good |
+	myInstVars := self allInstVarNames.
+	similarInstVars := aSimilarObject class allInstVarNames.
+	inst := self new.
+	myInstVars
+		doWithIndex: [ :each :index |
+			good := similarInstVars indexOf: each.
+			good > 0 ifTrue: [
+				  inst instVarAt: index put: (aSimilarObject instVarAt: good).
+					any := true
+			]].
+	any == nil ifTrue: [self subclassResponsibility].
+	^ inst.
+
++ readFrom: aStream
+	| object |
+	object := Compiler evaluate: aStream.
+	(object isKindOf: self)
+		ifFalse: [self error: self name + ' expected'].
+	^ object.

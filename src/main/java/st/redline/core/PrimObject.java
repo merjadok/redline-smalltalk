@@ -1,11 +1,13 @@
 /* Redline Smalltalk, Copyright (c) James C. Ladd. All rights reserved. See LICENSE in the root of this distribution. */
 package st.redline.core;
 
-import st.redline.classloader.*;
+import st.redline.classloader.SmalltalkClassLoader;
 
-import static st.redline.compiler.SmalltalkGeneratingVisitor.*;
-import static st.redline.core.PrimDoesNotUnderstand.*;
-import static st.redline.core.PrimSubclass.*;
+import java.util.ArrayList;
+
+import static st.redline.compiler.SmalltalkGeneratingVisitor.DEFAULT_IMPORTED_PACKAGE;
+import static st.redline.core.PrimDoesNotUnderstand.PRIM_DOES_NOT_UNDERSTAND;
+import static st.redline.core.PrimSubclass.PRIM_SUBCLASS;
 
 public class PrimObject {
 
@@ -52,7 +54,7 @@ public class PrimObject {
     }
 
     public PrimObject reference(String name) {
-        //System.out.println("** reference " + name);
+//        System.out.println("***** reference " + name);
         return resolveObject(name);
     }
 
@@ -61,14 +63,14 @@ public class PrimObject {
         return findObject(importFor(name));
     }
 
-    public PrimObject smalltalkBlock(Object value) {
+    public PrimObject smalltalkBlock(Object value, PrimContext homeContext) {
 //        System.out.println("** smalltalkBlock " + value);
-        return instanceOfWith("BlockClosure", value);
+        return instanceOfWith("BlockClosure", new Object[] { value, homeContext });
     }
 
-    public PrimObject smalltalkBlockAnswer(Object value, String answerClassName) {
+    public PrimObject smalltalkBlockAnswer(Object value, PrimContext homeContext, String answerClassName) {
 //        System.out.println("** smalltalkBlockAnswer " + value + " from " + answerClassName);
-        return instanceOfWith("BlockClosure", throwingAnswer(value, answerClassName));
+        return instanceOfWith("BlockClosure", new Object[] { throwingAnswer(value, answerClassName), homeContext });
     }
 
     private LambdaBlock throwingAnswer(Object value, String answerClassName) {
@@ -86,6 +88,18 @@ public class PrimObject {
             }
             throw blockAnswer;
         };
+    }
+
+    public PrimObject smalltalkCharacter(Object value) {
+        return instanceOfWith("Character", value);
+    }
+
+    public PrimObject smalltalkArray(Object ignored) {
+        return instanceOfWith("Array", new ArrayList<PrimObject>());
+    }
+
+    public PrimObject smalltalkInteger(Object value) {
+        return instanceOfWith("Integer", Integer.valueOf(String.valueOf(value)));
     }
 
     public PrimObject smalltalkMethod(Object value) {
@@ -116,7 +130,7 @@ public class PrimObject {
     }
 
     protected PrimObject instanceOf(String type) {
-        return isBootstrapping() ? new PrimObject() : resolveObject(type).perform("new", null);
+        return isBootstrapping() ? new PrimObject() : resolveObject(type).perform("new");
     }
 
     protected boolean isBootstrapping() {
@@ -150,84 +164,84 @@ public class PrimObject {
         return DEFAULT_IMPORTED_PACKAGE;
     }
 
-    public PrimObject perform(String selector, PrimContext outerContext) {
+    public PrimObject perform(String selector) {
 //        System.out.println("** perform(" + selector + ") " + this);
-        return perform0(outerContext, selector);
+        return perform0(selector);
     }
 
-    public PrimObject superPerform(String selector, PrimContext outerContext) {
+    public PrimObject superPerform(String selector) {
 //        System.out.println("** superPerform(" + selector + ") " + this);
-        return perform0s(outerContext, selector);
+        return perform0s(selector);
     }
 
-    public PrimObject perform(PrimObject arg1, String selector, PrimContext outerContext) {
+    public PrimObject perform(PrimObject arg1, String selector) {
 //        System.out.println("** perform(" + arg1 + "," + selector + ") " + this);
-        return perform0(outerContext, selector, arg1);
+        return perform0(selector, arg1);
     }
 
-    public PrimObject superPerform(PrimObject arg1, String selector, PrimContext outerContext) {
+    public PrimObject superPerform(PrimObject arg1, String selector) {
 //        System.out.println("** superPerform(" + arg1 + "," + selector + ") " + this);
-        return perform0s(outerContext, selector, arg1);
+        return perform0s(selector, arg1);
     }
 
-    public PrimObject perform(PrimObject arg1, PrimObject arg2, String selector, PrimContext outerContext) {
+    public PrimObject perform(PrimObject arg1, PrimObject arg2, String selector) {
         //System.out.println("** perform(" + arg1 + "," + arg2 + "," + selector + ") " + this);
-        return perform0(outerContext, selector, arg1, arg2);
+        return perform0(selector, arg1, arg2);
     }
 
-    public PrimObject superPerform(PrimObject arg1, PrimObject arg2, String selector, PrimContext outerContext) {
+    public PrimObject superPerform(PrimObject arg1, PrimObject arg2, String selector) {
         //System.out.println("** superPerform(" + arg1 + "," + arg2 + "," + selector + ") " + this);
-        return perform0s(outerContext, selector, arg1, arg2);
+        return perform0s(selector, arg1, arg2);
     }
 
-    public PrimObject perform(PrimObject arg1, PrimObject arg2, PrimObject arg3, String selector, PrimContext outerContext) {
+    public PrimObject perform(PrimObject arg1, PrimObject arg2, PrimObject arg3, String selector) {
 //        System.out.println("** perform(" + arg1 + "," + arg2 + "," + arg3 + "," + selector + ") " + this);
-        return perform0(outerContext, selector, arg1, arg2);
+        return perform0(selector, arg1, arg2);
     }
 
-    public PrimObject superPerform(PrimObject arg1, PrimObject arg2, PrimObject arg3, String selector, PrimContext outerContext) {
+    public PrimObject superPerform(PrimObject arg1, PrimObject arg2, PrimObject arg3, String selector) {
 //        System.out.println("** superPerform(" + arg1 + "," + arg2 + "," + arg3 + "," + selector + ") " + this);
-        return perform0s(outerContext, selector, arg1, arg2);
+        return perform0s(selector, arg1, arg2);
     }
 
-    public PrimObject perform(PrimObject arg1, PrimObject arg2, PrimObject arg3, PrimObject arg4, String selector, PrimContext outerContext) {
+    public PrimObject perform(PrimObject arg1, PrimObject arg2, PrimObject arg3, PrimObject arg4, String selector) {
 //        System.out.println("** perform(" + arg1 + "," + arg2 + "," + arg3 + "," + arg4 + "," + selector + ") " + this);
-        return perform0(outerContext, selector, arg1, arg2);
+        return perform0(selector, arg1, arg2);
     }
 
-    public PrimObject superPerform(PrimObject arg1, PrimObject arg2, PrimObject arg3, PrimObject arg4, String selector, PrimContext outerContext) {
+    public PrimObject superPerform(PrimObject arg1, PrimObject arg2, PrimObject arg3, PrimObject arg4, String selector) {
 //        System.out.println("** superPerform(" + arg1 + "," + arg2 + "," + arg3 + "," + arg4 + "," + selector + ") " + this);
-        return perform0s(outerContext, selector, arg1, arg2);
+        return perform0s(selector, arg1, arg2);
     }
 
-    public PrimObject perform(PrimObject arg1, PrimObject arg2, PrimObject arg3, PrimObject arg4, PrimObject arg5, String selector, PrimContext outerContext) {
+    public PrimObject perform(PrimObject arg1, PrimObject arg2, PrimObject arg3, PrimObject arg4, PrimObject arg5, String selector) {
 //        System.out.println("** perform(" + arg1 + "," + arg2 + "," + arg3 + "," + arg4 + "," + arg5 + "," + selector + ") " + this);
-        return perform0(outerContext, selector, arg1, arg2);
+        return perform0(selector, arg1, arg2);
     }
 
-    public PrimObject superPerform(PrimObject arg1, PrimObject arg2, PrimObject arg3, PrimObject arg4, PrimObject arg5, String selector, PrimContext outerContext) {
+    public PrimObject superPerform(PrimObject arg1, PrimObject arg2, PrimObject arg3, PrimObject arg4, PrimObject arg5, String selector) {
 //        System.out.println("** superPerform(" + arg1 + "," + arg2 + "," + arg3 + "," + arg4 + "," + arg5 + "," + selector + ") " + this);
-        return perform0s(outerContext, selector, arg1, arg2);
+        return perform0s(selector, arg1, arg2);
     }
 
-    protected PrimObject perform0(PrimContext outerContext, String selector, PrimObject ... arguments) {
-        return perform0(selfClass, outerContext, selector, arguments);
+    protected PrimObject perform0(String selector, PrimObject ... arguments) {
+        return perform0(selfClass, selector, arguments);
     }
 
-    protected PrimObject perform0s(PrimContext outerContext, String selector, PrimObject ... arguments) {
-        return perform0(selfClass.superclass(), outerContext, selector, arguments);
+    protected PrimObject perform0s(String selector, PrimObject ... arguments) {
+        return perform0(selfClass.superclass(), selector, arguments);
     }
 
-    protected PrimObject perform0(PrimObject foundInClass, PrimContext outerContext, String selector, PrimObject ... arguments) {
+    protected PrimObject perform0(PrimObject foundInClass, String selector, PrimObject ... arguments) {
         PrimObject cls = foundInClass;
         while (!cls.includesSelector(selector))
             cls = cls.superclass();
-        return apply(cls.methodFor(selector), cls, outerContext, selector, arguments);
+        return apply(cls.methodFor(selector), cls, selector, arguments);
     }
 
-    protected PrimObject apply(PrimObject method, PrimObject foundInClass, PrimContext outerContext, String selector, PrimObject ... arguments) {
+    protected PrimObject apply(PrimObject method, PrimObject foundInClass, String selector, PrimObject ... arguments) {
 //        System.out.println("** apply: #" + selector + " found in " + foundInClass + " to " + this);
-        PrimObject result = method.invoke(this, new PrimContext(this, foundInClass, outerContext, selector, arguments));
+        PrimObject result = method.invoke(this, new PrimContext(this, foundInClass, selector, arguments));
         //System.out.println("** result: " + String.valueOf(result));
         return result; // method.invoke(this, new PrimContext(this, foundInClass, outerContext, selector, arguments));
     }
@@ -237,7 +251,8 @@ public class PrimObject {
     }
 
     protected PrimObject methodFor(String selector) {
-        if ("subclass:".equals(selector))
+        // This only happens for Bootstrapped instance after that PrimClass takes over.
+        if (selector.startsWith("subclass:"))
             return PRIM_SUBCLASS;
         return PRIM_DOES_NOT_UNDERSTAND;
     }
@@ -266,8 +281,11 @@ public class PrimObject {
     }
 
     public PrimObject primitiveEval(PrimContext context) {
-//        System.out.println("primitiveEval: " + context);
-        return ((LambdaBlock) javaValue()).apply(this, this, context);
+//        System.out.println("primitiveEval: " + context + " " + ((Object[]) javaValue())[1]);
+        Object[] values = (Object[]) javaValue();
+        // Context is invocation context while values[11 is context of the creator of the block.
+        context.setupCallContext((PrimContext) values[1]);
+        return ((LambdaBlock) values[0]).apply(this, this, context);
     }
 
     public PrimObject primitive110(PrimContext context) {
@@ -281,5 +299,20 @@ public class PrimObject {
     public PrimObject primitive111(PrimContext context) {
 //        System.out.println("primitive111: " + context);
         return this.selfClass();
+    }
+
+    public PrimObject primitive306(PrimContext context) {
+        // ^ superclass
+        return this.superclass();
+    }
+
+    public PrimObject primitive307(PrimContext context) {
+//        (aClass == nil or: [aClass isKindOf: Behavior])
+//        ifTrue: [ superclass := aClass]
+//        ifFalse: [self error: 'superclass must be a class-describing object'].
+        PrimObject aSuperclass = context.argumentAt(0);
+        PrimClass theClass = (PrimClass) context.receiver();
+        theClass.superclass(aSuperclass);
+        return theClass;
     }
 }
